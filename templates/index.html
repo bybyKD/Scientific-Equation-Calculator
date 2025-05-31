@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scientific Nonlinear Equation Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Animate.css for animation -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Share Tech Mono', monospace, Arial, sans-serif;
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            background-attachment: fixed;
+        }
+        /* 3D dynamic background canvas covers the page */
+        #bg-3d-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .container, .sci-calc, .paper-result, .alert-danger, footer {
+            position: relative;
+            z-index: 2;
+        }
+        .sci-calc {
+            background: #f8f9fa;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+            border: 2px solid #b0bec5;
+            max-width: 420px;
+            margin: 40px auto 24px auto;
+            padding: 32px 28px 24px 28px;
+            position: relative;
+        }
+        .sci-calc:before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 18px;
+            border: 2px dashed #90caf9;
+            opacity: 0.18;
+            pointer-events: none;
+        }
+        .sci-calc-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5em;
+            color: #1976d2;
+            text-align: center;
+            margin-bottom: 18px;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        .sci-calc label, .sci-calc .form-label {
+            color: #1976d2;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .sci-calc .form-control, .sci-calc .form-select {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1.5px solid #90caf9;
+            border-radius: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        .sci-calc .form-control:focus, .sci-calc .form-select:focus {
+            border-color: #1976d2;
+            background: #fff;
+            color: #0d47a1;
+        }
+        .sci-calc .btn-sci {
+            background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+            letter-spacing: 2px;
+            box-shadow: 0 0 8px #90caf9;
+            transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+            margin-top: 8px;
+        }
+        .sci-calc .btn-sci:hover {
+            background: linear-gradient(90deg, #64b5f6 0%, #1976d2 100%);
+            color: #fff;
+            box-shadow: 0 0 24px #1976d2;
+        }
+        /* Paper effect for result */
+        .paper-result {
+            background: #fffbe7;
+            border: 1.5px solid #e0c97f;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px #e0c97f44;
+            padding: 28px 24px 18px 24px;
+            margin: 32px auto 0 auto;
+            max-width: 700px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1em;
+            color: #3e2723;
+            position: relative;
+            animation: fadeInPaper 1s;
+        }
+        .paper-result:before {
+            content: "";
+            position: absolute;
+            left: 18px; right: 18px; top: 0; height: 8px;
+            border-bottom: 2px dashed #e0c97f;
+            opacity: 0.5;
+        }
+        @keyframes fadeInPaper {
+            from { opacity: 0; transform: translateY(40px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .steps-table {
+            font-size: 0.97em;
+            color: #3e2723;
+            background: #fffde7;
+        }
+        .steps-table th, .steps-table td {
+            border-color: #bdb76b;
+            background: #fffde7;
+            color: #3e2723;
+        }
+        .steps-table th {
+            color: #1976d2;
+            background: #fff9c4;
+        }
+        .steps-table tr:nth-child(even) td {
+            background: #fffde7;
+        }
+        .alert-danger {
+            background: linear-gradient(90deg, #ffb300 0%, #ff7043 100%);
+            color: #3e2723;
+            border: none;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 0 8px #ffb300;
+        }
+        .footer-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+            color: #ff7043;
+        }
+        @media (max-width: 600px) {
+            .sci-calc { padding: 12px 6px 8px 6px; }
+            .paper-result { padding: 12px 6px 8px 6px; }
+            .steps-table { font-size: 0.89em; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-3d-canvas"></canvas>
+    <div class="container">
+        <div class="sci-calc shadow animate__animated animate__fadeInDown">
+            <div class="sci-calc-title">Scientific Equation Calculator</div>
+            <form method="post" autocomplete="off">
+                <div class="mb-2">
+                    <label class="form-label">Pilih Metode</label>
+                    <select class="form-select" name="method" id="method" required onchange="updateFields()">
+                        <option value="bisection">Bisection</option>
+                        <option value="regula_falsi">Regula Falsi</option>
+                        <option value="fixed_point">Fixed Point Iteration</option>
+                        <option value="newton_raphson">Newton-Raphson</option>
+                        <option value="secant">Secant</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">f(x) <span class="text-muted">(gunakan x, contoh: x**3 - x - 2)</span></label>
+                    <input type="text" class="form-control" name="expr" required value="{{ request.form.get('expr', 'x**3 - x - 2') }}">
+                </div>
+                <div class="mb-2" id="dexpr-div" style="display:none;">
+                    <label class="form-label">Turunan f(x) <span class="text-muted">(untuk Newton-Raphson, contoh: 3*x**2 - 1)</span></label>
+                    <input type="text" class="form-control" name="dexpr" value="{{ request.form.get('dexpr', '3*x**2 - 1') }}">
+                </div>
+                <div class="mb-2" id="gexpr-div" style="display:none;">
+                    <label class="form-label">g(x) <span class="text-muted">(untuk Fixed Point, contoh: (x+2)**(1/3))</span></label>
+                    <input type="text" class="form-control" name="gexpr" value="{{ request.form.get('gexpr', '') }}">
+                </div>
+                <div class="row">
+                    <div class="col mb-2" id="a-div">
+                        <label class="form-label">a</label>
+                        <input type="number" step="any" class="form-control" name="a" value="{{ request.form.get('a', 1) }}">
+                    </div>
+                    <div class="col mb-2" id="b-div">
+                        <label class="form-label">b</label>
+                        <input type="number" step="any" class="form-control" name="b" value="{{ request.form.get('b', 2) }}">
+                    </div>
+                    <div class="col mb-2" id="x0-div" style="display:none;">
+                        <label class="form-label">x₀</label>
+                        <input type="number" step="any" class="form-control" name="x0" value="{{ request.form.get('x0', 1.5) }}">
+                    </div>
+                    <div class="col mb-2" id="x1-div" style="display:none;">
+                        <label class="form-label">x₁</label>
+                        <input type="number" step="any" class="form-control" name="x1" value="{{ request.form.get('x1', 2) }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col mb-2">
+                        <label class="form-label">Toleransi</label>
+                        <input type="number" step="any" class="form-control" name="tol" value="{{ request.form.get('tol', 1e-6) }}">
+                    </div>
+                    <div class="col mb-2">
+                        <label class="form-label">Maks Iterasi</label>
+                        <input type="number" class="form-control" name="max_iter" value="{{ request.form.get('max_iter', 100) }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-sci w-100 animate__animated animate__pulse animate__infinite">Hitung</button>
+            </form>
+        </div>
+        {% if error %}
+            <div class="alert alert-danger animate__animated animate__shakeX">{{ error }}</div>
+        {% endif %}
+        {% if result is not none %}
+            <div class="paper-result animate__animated animate__fadeInUp">
+                <h4 style="color:#1976d2;font-weight:bold;">Hasil:</h4>
+                <div style="font-size:1.2em;margin-bottom:12px;">
+                    <span style="color:#388e3c;">{{ result }}</span>
+                </div>
+                {% if steps %}
+                    <div class="table-responsive animate__animated animate__fadeIn">
+                        <table class="table table-bordered steps-table mt-3">
+                            <thead>
+                            <tr>
+                                {% for key in steps[0].keys() %}
+                                    <th>{{ key }}</th>
+                                {% endfor %}
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for row in steps %}
+                                <tr>
+                                    {% for val in row.values() %}
+                                        <td>{{ val }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        <footer class="text-center mt-4 mb-2" style="color:#1976d2;">
+            &copy; 2025 <a class="footer-link" href="#">Scientific Nonlinear Equation Calculator</a>
+        </footer>
+    </div>
+    <script>
+        function updateFields() {
+            let method = document.getElementById('method').value;
+            document.getElementById('a-div').style.display = (method === 'bisection' || method === 'regula_falsi') ? '' : 'none';
+            document.getElementById('b-div').style.display = (method === 'bisection' || method === 'regula_falsi') ? '' : 'none';
+            document.getElementById('x0-div').style.display = (method === 'newton_raphson' || method === 'fixed_point' || method === 'secant') ? '' : 'none';
+            document.getElementById('x1-div').style.display = (method === 'secant') ? '' : 'none';
+            document.getElementById('dexpr-div').style.display = (method === 'newton_raphson') ? '' : 'none';
+            document.getElementById('gexpr-div').style.display = (method === 'fixed_point') ? '' : 'none';
+        }
+        window.onload = updateFields;
+
+        // 3D Dynamic Background (animated floating spheres)
+        const canvas = document.getElementById('bg-3d-canvas');
+        const ctx = canvas.getContext('2d');
+        let w = window.innerWidth, h = window.innerHeight;
+        function resizeCanvas() {
+            w = window.innerWidth;
+            h = window.innerHeight;
+            canvas.width = w;
+            canvas.height = h;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Generate spheres
+        const spheres = [];
+        const sphereColors = ['#90caf9', '#1976d2', '#ffb300', '#ff7043', '#b0bec5'];
+        for (let i = 0; i < 16; i++) {
+            spheres.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                z: Math.random() * 800 + 200,
+                r: Math.random() * 32 + 24,
+                dx: (Math.random() - 0.5) * 0.6,
+                dy: (Math.random() - 0.5) * 0.6,
+                dz: (Math.random() - 0.5) * 0.4,
+                color: sphereColors[Math.floor(Math.random() * sphereColors.length)],
+                alpha: Math.random() * 0.3 + 0.15
+            });
+        }
+
+        function draw3D() {
+            ctx.clearRect(0, 0, w, h);
+            for (let s of spheres) {
+                // Perspective projection
+                let perspective = 400 / (s.z || 1);
+                let sx = w/2 + (s.x - w/2) * perspective;
+                let sy = h/2 + (s.y - h/2) * perspective;
+                let sr = s.r * perspective * 0.7;
+                ctx.save();
+                ctx.globalAlpha = s.alpha;
+                let grad = ctx.createRadialGradient(sx, sy, sr*0.2, sx, sy, sr);
+                grad.addColorStop(0, "#fff");
+                grad.addColorStop(0.2, s.color);
+                grad.addColorStop(1, "#fff0");
+                ctx.beginPath();
+                ctx.arc(sx, sy, sr, 0, 2 * Math.PI);
+                ctx.fillStyle = grad;
+                ctx.shadowColor = s.color;
+                ctx.shadowBlur = 32 * perspective;
+                ctx.fill();
+                ctx.restore();
+
+                // Move sphere
+                s.x += s.dx;
+                s.y += s.dy;
+                s.z += s.dz;
+                if (s.x < 0 || s.x > w) s.dx *= -1;
+                if (s.y < 0 || s.y > h) s.dy *= -1;
+                if (s.z < 200 || s.z > 1000) s.dz *= -1;
+            }
+            requestAnimationFrame(draw3D);
+        }
+        draw3D();
+    </script>
+</body>
+</html>
